@@ -4,7 +4,7 @@
 
 ---
 
-## 🌟 Architectural Blueprint
+## Architectural Blueprint
 
 ```
                          ┌─────────────────────────┐
@@ -66,7 +66,7 @@
 
 ---
 
-## 🔬 Mathematical Foundations Implemented from Scratch
+## Mathematical Foundations Implemented from Scratch
 
 ### 1. Dense Vector Similarity (NumPy Vector Store)
 Cosine similarity measures the cosine of the angle between query vector $\mathbf{q}$ and document chunk vector $\mathbf{v}$:
@@ -104,7 +104,7 @@ $$\text{Score}_{\text{cross}}(q, d) = \text{CrossEncoder}(\mathbf{q} \circ \math
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 rag-from-first-principles/
@@ -151,7 +151,7 @@ rag-from-first-principles/
 
 ---
 
-## 🚀 Quickstart
+## Quickstart
 
 ### 1. Installation with Poetry (or pip)
 
@@ -188,7 +188,7 @@ python main.py
 
 ---
 
-## 📚 Complete Phase Documentation (`docs/`)
+## Complete Phase Documentation (`docs/`)
 
 Explore in-depth mathematical derivations and design explanations:
 
@@ -203,7 +203,7 @@ Explore in-depth mathematical derivations and design explanations:
 
 ---
 
-## 🔍 Explainable Multi-Stage Inspection (`/inspect`)
+## Explainable Multi-Stage Inspection (`/inspect`)
 
 Inspect granular scores across each step of the retrieval and ranking funnel:
 
@@ -225,7 +225,7 @@ Query: "What is the refund period and policy?"
 
 ---
 
-## 📊 Automated Retrieval Benchmark
+## Automated Retrieval Benchmark
 
 Run `python main.py benchmark` to evaluate all retrieval configurations on the dataset:
 
@@ -238,7 +238,7 @@ Run `python main.py benchmark` to evaluate all retrieval configurations on the d
 
 ---
 
-## ⚡ Incremental Document Ingestion
+## Incremental Document Ingestion
 
 The ingestion pipeline computes cryptographic content hashes (`SHA-256`) for every file:
 
@@ -255,7 +255,7 @@ Compute SHA-256 Hash
 
 ---
 
-## 🧪 Running the Unit Tests
+## Running the Unit Tests
 
 ```bash
 python -m unittest discover tests
@@ -295,5 +295,5 @@ print(result.answer)
 
 ---
 
-## 📜 License
+## License
 MIT License. Built for educational rigor and high-performance production understanding.
