@@ -272,7 +272,7 @@ OK
 
 ---
 
-## 🛠️ Extensibility & Customization
+## Extensibility & Customization
 
 ### Using Google Gemini API
 
