@@ -5,7 +5,7 @@
 
 ---
 
-## 🎯 Project Positioning & Technical Scope
+## Project Positioning & Technical Scope
 
 Unlike educational notebook tutorials or wrapper libraries around LangChain/LlamaIndex, this repository implements the **core algorithmic machinery of a production RAG system** from scratch:
 
@@ -246,7 +246,7 @@ Query: "What is the refund period and policy?"
 
 Run `python main.py benchmark` to evaluate all retrieval configurations on the dataset:
 =======
-## 📊 Empirical Retrieval Benchmark
+## Empirical Retrieval Benchmark
 Tested on a multi-domain engineering knowledge base covering Distributed Consensus (Raft/PBFT), Database Concurrency (MVCC/2PL), Operating Systems (Virtual Memory/Paging), Neural Optimization (AdamW/FlashAttention), Cloud Policies, and Event Streaming (Kafka):
 >>>>>>> c884673 (docs: clarify technical scope, position as production internals, and add empirical benchmark analysis)
 
@@ -257,7 +257,7 @@ Tested on a multi-domain engineering knowledge base covering Distributed Consens
 | **Hybrid (RRF)** | **1.0000** | **1.0000** | **0.9946** | **1.0000** | 141.93 |
 | **Hybrid + Reranker** | **1.0000** | **1.0000** | **1.0000** | **1.0000** | 2837.75 |
 
-### 📈 Quantitative Takeaways:
+### Quantitative Takeaways:
 1. **Hybrid RRF boosts Recall@5 to 100% (+5.56% increase over single retrievers)**: Fusing lexical BM25 matching and dense semantic vectors eliminates single-retriever blind spots (e.g. acronyms missed by dense embeddings, semantic paraphrases missed by BM25).
 2. **Cross-Encoder Reranker achieves a perfect 1.0000 NDCG@5**: Joint all-to-all cross-attention eliminates false positives and elevates the most authoritative context chunk to Rank 1 across 100% of benchmark queries.
 3. **Sub-millisecond Lexical Speed**: The pure-Python BM25 inverted index executes in **0.15ms**, making it suitable for ultra-fast first-stage candidate filtering.
