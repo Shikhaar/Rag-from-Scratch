@@ -1,0 +1,42 @@
+{
+  "name": "RAG_Engineering_Benchmark",
+  "description": "Standard ground-truth evaluation dataset covering distributed systems, cloud policy, and neural network optimization.",
+  "samples": [
+    {
+      "query": "What is the refund period and policy for enterprise customers?",
+      "relevant_doc_names": ["cloud_platform_policy.txt"],
+      "relevant_keywords": ["refund", "30-day", "billing"],
+      "ground_truth_answer": "Enterprise customers are eligible for a full refund within a 30-day trial period, and prorated credits between 30 and 60 days."
+    },
+    {
+      "query": "How many nodes are needed in PBFT to tolerate f Byzantine faults?",
+      "relevant_doc_names": ["distributed_systems_handbook.md"],
+      "relevant_keywords": ["Byzantine", "PBFT", "3f + 1"],
+      "ground_truth_answer": "PBFT requires 3f + 1 total nodes to tolerate f Byzantine adversarial nodes."
+    },
+    {
+      "query": "Why does AdamW decouple weight decay from the gradient update?",
+      "relevant_doc_names": ["neural_network_optimization.md"],
+      "relevant_keywords": ["AdamW", "decouples", "weight decay"],
+      "ground_truth_answer": "AdamW decouples weight decay from gradient updates to prevent adaptive second-moment scaling from distorting L2 regularization."
+    },
+    {
+      "query": "What is the monthly SLA uptime commitment and SLA credit percentage?",
+      "relevant_doc_names": ["cloud_platform_policy.txt"],
+      "relevant_keywords": ["SLA", "99.99%", "uptime", "credit"],
+      "ground_truth_answer": "The platform guarantees 99.99% monthly uptime, with a 10% credit if between 99.0% and 99.99%, and 25% credit below 99.0%."
+    },
+    {
+      "query": "How does FlashAttention achieve memory speedups on GPU SRAM?",
+      "relevant_doc_names": ["neural_network_optimization.md"],
+      "relevant_keywords": ["FlashAttention", "SRAM", "tiling", "online softmax"],
+      "ground_truth_answer": "FlashAttention uses SRAM tiling, online softmax normalization, and recomputation during the backward pass to avoid HBM memory IO."
+    },
+    {
+      "query": "How does Raft leader election work and what is the randomized timer range?",
+      "relevant_doc_names": ["distributed_systems_handbook.md"],
+      "relevant_keywords": ["Raft", "election", "150ms", "300ms", "RequestVote"],
+      "ground_truth_answer": "Followers start an election when their timer (randomized between 150ms and 300ms) expires, requesting votes to achieve a majority quorum."
+    }
+  ]
+}

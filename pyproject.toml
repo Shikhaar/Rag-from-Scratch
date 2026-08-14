@@ -1,0 +1,32 @@
+[project]
+name = "rag-from-first-principles"
+version = "0.1.0"
+description = "A production-oriented Retrieval-Augmented Generation system implemented from first principles in Python"
+authors = [
+    { name = "Shikhar Srivastava", email = "shikhar@example.com" }
+]
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "numpy>=1.24.0",
+    "sentence-transformers>=2.2.2",
+    "torch>=2.0.0",
+    "pypdf>=3.17.0",
+    "google-generativeai>=0.8.0",
+    "tabulate>=0.9.0",
+    "rich>=13.0.0"
+]
+
+[project.scripts]
+rag = "main:main"
+
+[tool.poetry]
+packages = [
+    { include = "core" },
+    { include = "storage" },
+    { include = "evaluation" }
+]
+
+[build-system]
+requires = ["poetry-core>=2.0.0"]
+build-backend = "poetry.core.masonry.api"

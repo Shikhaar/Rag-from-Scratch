@@ -1,0 +1,19 @@
+# Cloud Platform Service Level Agreement & Refund Policies
+
+## 1. Refund and Billing Policy
+Enterprise customers are eligible for a full refund within a 30-day trial period from the initial invoice date. Requests submitted after 30 days but before 60 days are eligible for prorated service credits only. Any refund request beyond 60 days will be rejected under standard terms.
+
+To request a refund or credit, the organization's billing administrator must submit a ticket tagged 'Billing Dispute' with the associated Invoice ID and transaction hash.
+
+## 2. Service Level Agreement (SLA) & Uptime Commitments
+The Cloud Platform guarantees a Monthly Uptime Percentage of at least 99.99% for Tier 1 multi-region compute clusters. 
+If uptime falls below 99.99% but remains above 99.0%, customers receive a 10% SLA credit.
+If uptime falls below 99.0%, customers receive a 25% SLA credit on their monthly billing cycle.
+
+## 3. Data Retention and Compliance
+All operational audit logs and database snapshots are retained for exactly 7 years to comply with SOC2 Type II and HIPAA frameworks.
+Ephemeral compute instance logs are purged automatically after 14 calendar days unless forwarded to a cold-storage S3 bucket.
+
+## 4. API Rate Limits and Egress Pricing
+Standard API rate limits are capped at 10,000 requests per minute per tenant. Burst traffic allows up to 15,000 requests per minute for periods under 30 seconds.
+Data egress between different cloud regions is billed at $0.02 per Gigabyte, whereas intra-zone data transfers remain free of charge.
