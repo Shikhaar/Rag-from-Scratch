@@ -1,42 +1,78 @@
 {
-  "name": "RAG_Engineering_Benchmark",
-  "description": "Standard ground-truth evaluation dataset covering distributed systems, cloud policy, and neural network optimization.",
+  "name": "Production_RAG_Engineering_Benchmark",
+  "description": "Comprehensive evaluation dataset covering Operating Systems, Database Concurrency, Distributed Consensus, Neural Architectures, Cloud Infrastructure, and Event Streaming.",
   "samples": [
     {
-      "query": "What is the refund period and policy for enterprise customers?",
+      "query": "What is the refund period and billing dispute procedure for enterprise customers?",
       "relevant_doc_names": ["cloud_platform_policy.txt"],
-      "relevant_keywords": ["refund", "30-day", "billing"],
-      "ground_truth_answer": "Enterprise customers are eligible for a full refund within a 30-day trial period, and prorated credits between 30 and 60 days."
+      "relevant_keywords": ["refund", "30-day", "Billing Dispute", "invoice"],
+      "ground_truth_answer": "Enterprise customers receive a full refund within 30 days, prorated credits between 30 and 60 days, via tickets tagged 'Billing Dispute'."
     },
     {
-      "query": "How many nodes are needed in PBFT to tolerate f Byzantine faults?",
+      "query": "How many total nodes are required in PBFT to tolerate f Byzantine adversarial nodes?",
       "relevant_doc_names": ["distributed_systems_handbook.md"],
-      "relevant_keywords": ["Byzantine", "PBFT", "3f + 1"],
+      "relevant_keywords": ["Byzantine", "PBFT", "3f + 1", "adversarial"],
       "ground_truth_answer": "PBFT requires 3f + 1 total nodes to tolerate f Byzantine adversarial nodes."
     },
     {
-      "query": "Why does AdamW decouple weight decay from the gradient update?",
+      "query": "Why does AdamW decouple weight decay from adaptive momentum gradients?",
       "relevant_doc_names": ["neural_network_optimization.md"],
-      "relevant_keywords": ["AdamW", "decouples", "weight decay"],
+      "relevant_keywords": ["AdamW", "decouple", "weight decay", "second-moment"],
       "ground_truth_answer": "AdamW decouples weight decay from gradient updates to prevent adaptive second-moment scaling from distorting L2 regularization."
     },
     {
-      "query": "What is the monthly SLA uptime commitment and SLA credit percentage?",
+      "query": "What is the monthly SLA uptime commitment and associated credit percentages?",
       "relevant_doc_names": ["cloud_platform_policy.txt"],
-      "relevant_keywords": ["SLA", "99.99%", "uptime", "credit"],
+      "relevant_keywords": ["SLA", "99.99%", "uptime", "credit", "10%", "25%"],
       "ground_truth_answer": "The platform guarantees 99.99% monthly uptime, with a 10% credit if between 99.0% and 99.99%, and 25% credit below 99.0%."
     },
     {
-      "query": "How does FlashAttention achieve memory speedups on GPU SRAM?",
+      "query": "How does FlashAttention utilize SRAM tiling and online softmax to reduce memory IO?",
       "relevant_doc_names": ["neural_network_optimization.md"],
-      "relevant_keywords": ["FlashAttention", "SRAM", "tiling", "online softmax"],
-      "ground_truth_answer": "FlashAttention uses SRAM tiling, online softmax normalization, and recomputation during the backward pass to avoid HBM memory IO."
+      "relevant_keywords": ["FlashAttention", "SRAM", "tiling", "online softmax", "HBM"],
+      "ground_truth_answer": "FlashAttention uses GPU SRAM tiling, online softmax normalization, and recomputation during the backward pass to avoid HBM memory IO."
     },
     {
-      "query": "How does Raft leader election work and what is the randomized timer range?",
+      "query": "What is a TLB shootdown and when is an Inter-Processor Interrupt broadcast?",
+      "relevant_doc_names": ["operating_systems_virtual_memory.md"],
+      "relevant_keywords": ["TLB Shootdown", "Inter-Processor Interrupt", "IPI", "page table"],
+      "ground_truth_answer": "A TLB shootdown occurs when page table entries change, broadcasting an IPI to flush stale TLB entries across all CPU cores."
+    },
+    {
+      "query": "How does PostgreSQL MVCC use xmin and xmax tuple headers to ensure readers never block writers?",
+      "relevant_doc_names": ["database_concurrency_control.md"],
+      "relevant_keywords": ["MVCC", "xmin", "xmax", "tuple", "PostgreSQL"],
+      "ground_truth_answer": "PostgreSQL MVCC writes new tuple versions tagged with the creating transaction's xmin and setting xmax on the old tuple without in-place overwriting."
+    },
+    {
+      "query": "What is the write skew concurrency anomaly under snapshot isolation?",
+      "relevant_doc_names": ["database_concurrency_control.md"],
+      "relevant_keywords": ["Write Skew", "Snapshot Isolation", "overlapping", "anomaly"],
+      "ground_truth_answer": "Write skew occurs when concurrent transactions read overlapping data, check a constraint, and update disjoint rows violating global invariants."
+    },
+    {
+      "query": "What is the high watermark in Kafka and how does min.insync.replicas safeguard writes?",
+      "relevant_doc_names": ["kafka_event_streaming.md"],
+      "relevant_keywords": ["High Watermark", "HW", "min.insync.replicas", "ISR"],
+      "ground_truth_answer": "The High Watermark is the offset acknowledged by all ISR members; min.insync.replicas rejects writes with acks=all if active ISR count is too low."
+    },
+    {
+      "query": "How does the Cooperative Sticky Assignor eliminate stop-the-world pauses during Kafka rebalancing?",
+      "relevant_doc_names": ["kafka_event_streaming.md"],
+      "relevant_keywords": ["Cooperative Sticky", "rebalancing", "stop-the-world", "incremental"],
+      "ground_truth_answer": "The Cooperative Sticky Assignor rebalances partitions incrementally without pausing unchanged partition assignments."
+    },
+    {
+      "query": "What happens during a Linux page fault exception on control register CR2?",
+      "relevant_doc_names": ["operating_systems_virtual_memory.md"],
+      "relevant_keywords": ["CR2", "page fault", "#PF", "vm_area_struct"],
+      "ground_truth_answer": "The kernel inspects CR2 for the faulting virtual address, validates it against vm_area_struct, and allocates a frame from the buddy allocator."
+    },
+    {
+      "query": "How do randomized election timers (150ms-300ms) prevent split votes in Raft consensus?",
       "relevant_doc_names": ["distributed_systems_handbook.md"],
-      "relevant_keywords": ["Raft", "election", "150ms", "300ms", "RequestVote"],
-      "ground_truth_answer": "Followers start an election when their timer (randomized between 150ms and 300ms) expires, requesting votes to achieve a majority quorum."
+      "relevant_keywords": ["Raft", "150ms", "300ms", "election timer", "split vote"],
+      "ground_truth_answer": "Raft uses randomized election timers between 150ms and 300ms so one follower times out first and collects a majority quorum."
     }
   ]
 }

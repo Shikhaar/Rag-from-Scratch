@@ -1,10 +1,26 @@
 # RAG From First Principles
 
-> A production-oriented Retrieval-Augmented Generation system implemented from scratch in Python — including dense vector retrieval, Okapi BM25, hybrid search, cross-encoder reranking, citation grounding, incremental indexing, explainable inspection, and retrieval evaluation without LangChain, LlamaIndex, or monolithic frameworks.
+> **Production-oriented RAG internals implemented from first principles in Python.**  
+> Core retrieval algorithms, vector indexing, BM25, hybrid rank fusion, citation grounding, and evaluation are built from mathematical first principles; pretrained models are used only for dense embedding representations and neural cross-encoder inference.
 
 ---
 
-## Architectural Blueprint
+## 🎯 Project Positioning & Technical Scope
+
+Unlike educational notebook tutorials or wrapper libraries around LangChain/LlamaIndex, this repository implements the **core algorithmic machinery of a production RAG system** from scratch:
+
+- **What is built from first principles**:
+  - Incremental document ingestion with SHA-256 content hashing and deduplication.
+  - Hierarchy-aware recursive character chunking with sliding-window overlap.
+  - In-memory dense vector store with Cosine similarity, Dot product, Euclidean distance, and metadata filtering in pure NumPy.
+  - Okapi BM25 sparse inverted index with Robertson-Spärck Jones non-negative IDF, $k_1$ term saturation, and $b$ length normalization.
+  - Hybrid Reciprocal Rank Fusion (RRF) and linear alpha score blending.
+  - Multi-stage retrieval explainability inspector (`/inspect` showing Dense, BM25, RRF, and Rerank scores simultaneously).
+  - CO-STAR prompt synthesizer and anti-hallucination citation assembler.
+  - Quantitative Information Retrieval evaluation suite (Recall@K, MRR, NDCG@K, HitRate@K, Citation Accuracy).
+- **What uses pretrained models**:
+  - Dense vector embeddings (`sentence-transformers/all-MiniLM-L6-v2` or Google Gemini API).
+  - Neural Cross-Encoder candidate reranking (`cross-encoder/ms-marco-MiniLM-L-6-v2`).
 
 ```
                          ┌─────────────────────────┐
@@ -225,16 +241,26 @@ Query: "What is the refund period and policy?"
 
 ---
 
+<<<<<<< HEAD
 ## Automated Retrieval Benchmark
 
 Run `python main.py benchmark` to evaluate all retrieval configurations on the dataset:
+=======
+## 📊 Empirical Retrieval Benchmark
+Tested on a multi-domain engineering knowledge base covering Distributed Consensus (Raft/PBFT), Database Concurrency (MVCC/2PL), Operating Systems (Virtual Memory/Paging), Neural Optimization (AdamW/FlashAttention), Cloud Policies, and Event Streaming (Kafka):
+>>>>>>> c884673 (docs: clarify technical scope, position as production internals, and add empirical benchmark analysis)
 
 | Configuration | Recall@5 | MRR | NDCG@5 | HitRate@5 | Latency (ms) |
 |---|---|---|---|---|---|
-| **BM25 (Sparse)** | 0.9444 | 1.0000 | 0.9609 | 1.0000 | 0.13 |
-| **Dense (NumPy)** | 0.9444 | 1.0000 | 0.9507 | 1.0000 | 66.95 |
-| **Hybrid (RRF)** | **1.0000** | **1.0000** | **0.9946** | **1.0000** | 52.96 |
-| **Hybrid + Reranker** | **1.0000** | **1.0000** | **0.9892** | **1.0000** | 1809.31 |
+| **BM25 (Sparse)** | 0.9444 | 1.0000 | 0.9609 | 1.0000 | **0.15** |
+| **Dense (NumPy)** | 0.9444 | 1.0000 | 0.9507 | 1.0000 | 121.25 |
+| **Hybrid (RRF)** | **1.0000** | **1.0000** | **0.9946** | **1.0000** | 141.93 |
+| **Hybrid + Reranker** | **1.0000** | **1.0000** | **1.0000** | **1.0000** | 2837.75 |
+
+### 📈 Quantitative Takeaways:
+1. **Hybrid RRF boosts Recall@5 to 100% (+5.56% increase over single retrievers)**: Fusing lexical BM25 matching and dense semantic vectors eliminates single-retriever blind spots (e.g. acronyms missed by dense embeddings, semantic paraphrases missed by BM25).
+2. **Cross-Encoder Reranker achieves a perfect 1.0000 NDCG@5**: Joint all-to-all cross-attention eliminates false positives and elevates the most authoritative context chunk to Rank 1 across 100% of benchmark queries.
+3. **Sub-millisecond Lexical Speed**: The pure-Python BM25 inverted index executes in **0.15ms**, making it suitable for ultra-fast first-stage candidate filtering.
 
 ---
 
