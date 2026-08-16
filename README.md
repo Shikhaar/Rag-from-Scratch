@@ -1,31 +1,29 @@
 # RAG From First Principles
 
 > **Production-oriented RAG internals implemented from first principles in Python.**  
-> Core retrieval algorithms, vector indexing, BM25, hybrid rank fusion, citation grounding, and evaluation are built from mathematical first principles; pretrained models are used only for dense embedding representations and neural cross-encoder inference.
+> Core retrieval algorithms, vector indexing, BM25, hybrid rank fusion, citation grounding, and evaluation are engineered from first principles; pretrained models are used only for dense embedding representations and neural cross-encoder inference.
 
 ---
 
-## Project Positioning & Technical Scope
+## 🎯 Why I Built This
 
-Unlike educational notebook tutorials or wrapper libraries around LangChain/LlamaIndex, this repository implements the **core algorithmic machinery of a production RAG system** from scratch:
+Most Retrieval-Augmented Generation (RAG) applications abstract retrieval behind monolithic frameworks like LangChain or LlamaIndex, treating similarity search and ranking as black boxes.
 
-- **What is built from first principles**:
-  - Incremental document ingestion with SHA-256 content hashing and deduplication.
-  - Hierarchy-aware recursive character chunking with sliding-window overlap.
-  - In-memory dense vector store with Cosine similarity, Dot product, Euclidean distance, and metadata filtering in pure NumPy.
-  - Okapi BM25 sparse inverted index with Robertson-Spärck Jones non-negative IDF, $k_1$ term saturation, and $b$ length normalization.
-  - Hybrid Reciprocal Rank Fusion (RRF) and linear alpha score blending.
-  - Multi-stage retrieval explainability inspector (`/inspect` showing Dense, BM25, RRF, and Rerank scores simultaneously).
-  - CO-STAR prompt synthesizer and anti-hallucination citation assembler.
-  - Quantitative Information Retrieval evaluation suite (Recall@K, MRR, NDCG@K, HitRate@K, Citation Accuracy).
-- **What uses pretrained models**:
-  - Dense vector embeddings (`sentence-transformers/all-MiniLM-L6-v2` or Google Gemini API).
-  - Neural Cross-Encoder candidate reranking (`cross-encoder/ms-marco-MiniLM-L-6-v2`).
+This project implements the core retrieval and generation pipeline from first principles to understand and control every layer of the RAG lifecycle:
+- How **recursive chunking and boundary preservation** impact embedding semantics and retrieval recall.
+- How **dense vector geometry (NumPy)** compares against **sparse term matching (Okapi BM25)** across different query types.
+- How **rank fusion (RRF)** combines disparate score distributions without heuristic calibration.
+- How **two-stage retrieval with cross-encoder reranking** eliminates false positives.
+- How to **quantitatively evaluate retrieval quality** using standard Information Retrieval metrics (Recall@K, Precision@K, MRR, NDCG@K).
+
+---
+
+## 🏗️ Architecture
 
 ```
                          ┌─────────────────────────┐
-                         │   Source Documents      │
-                         │   (.txt, .md, .pdf)     │
+                         │    Source Documents     │
+                         │    (.txt, .md, .pdf)    │
                          └────────────┬────────────┘
                                       │
                                       ▼
@@ -76,250 +74,249 @@ Unlike educational notebook tutorials or wrapper libraries around LangChain/Llam
                         Evaluation & Benchmark Suite
                  ┌────────────────────┼────────────────────┐
                  ▼                    ▼                    ▼
-             Recall@K                MRR                NDCG@K
-          (Hit Rate @ K)     (Mean Recip. Rank)   (Discounted Gain)
+             Recall@K             Precision@K             MRR / NDCG@K
 ```
 
 ---
 
-## Mathematical Foundations Implemented from Scratch
+## 🧩 Key Features
 
-### 1. Dense Vector Similarity (NumPy Vector Store)
-Cosine similarity measures the cosine of the angle between query vector $\mathbf{q}$ and document chunk vector $\mathbf{v}$:
+| Component | What It Does | Implementation |
+|---|---|---|
+| **Document Loaders** | Ingests `.txt`, `.md`, `.pdf` with encoding detection and page metadata | [`core/loaders.py`](./core/loaders.py) |
+| **Recursive Chunking** | Hierarchical boundary splitting (`\n\n` &rarr; `\n` &rarr; `. `) with sliding overlap | [`core/chunker.py`](./core/chunker.py) |
+| **Dense Vector Store** | In-memory store with Cosine, Dot product, Euclidean distance, and metadata filters in pure NumPy | [`core/vector_store.py`](./core/vector_store.py) |
+| **BM25 Inverted Index** | Okapi BM25 sparse keyword search from scratch ($k_1=1.5, b=0.75$, Robertson-Spärck Jones IDF) | [`core/bm25.py`](./core/bm25.py) |
+| **Hybrid Retrieval** | Reciprocal Rank Fusion (RRF with $k=60$) and linear score normalization | [`core/retriever.py`](./core/retriever.py) |
+| **Neural Reranking** | Cross-Encoder joint query-document cross-attention for precision reordering | [`core/reranker.py`](./core/reranker.py) |
+| **CO-STAR Prompting** | Structured prompt assembly with anti-hallucination guardrails and inline citations (`[Source X]`) | [`core/prompt.py`](./core/prompt.py) |
+| **Incremental Indexing** | SHA-256 document hashing to skip unchanged files and re-index modified content | [`storage/index.py`](./storage/index.py) |
+| **Retrieval Evaluation** | Quantitative IR metrics: Recall@K, Precision@K, HitRate@K, MRR, NDCG@K | [`evaluation/metrics.py`](./evaluation/metrics.py) |
 
-$$\text{CosineSim}(\mathbf{q}, \mathbf{v}) = \frac{\mathbf{q} \cdot \mathbf{v}}{\|\mathbf{q}\|_2 \|\mathbf{v}\|_2} = \frac{\sum_{i=1}^D q_i v_i}{\sqrt{\sum_{i=1}^D q_i^2} \sqrt{\sum_{i=1}^D v_i^2}}$$
+---
 
-### 2. Okapi BM25 Sparse Inverted Index
-The Robertson-Spärck Jones non-negative IDF and length-normalized term frequency formulation:
+## 🔍 Retrieval Strategies
 
-$$\text{IDF}(q_i) = \ln\left(\frac{N - n(q_i) + 0.5}{n(q_i) + 0.5} + 1\right)$$
+### 1. Dense Retrieval
+- **Mechanism**: Projects query and chunks into continuous vector space; calculates Cosine similarity via NumPy matrix multiplication.
+- **Best for**: Conceptual questions, semantic paraphrasing, and thematic relevance.
 
-$$\text{Score}_{\text{BM25}}(D, Q) = \sum_{q_i \in Q} \text{IDF}(q_i) \cdot \frac{f(q_i, D) \cdot (k_1 + 1)}{f(q_i, D) + k_1 \cdot \left(1 - b + b \cdot \frac{|D|}{\text{avgdl}}\right)}$$
+### 2. Sparse Retrieval (Okapi BM25)
+- **Mechanism**: Token frequency normalized by document length and inverse document frequency.
+- **Best for**: Exact keywords, technical identifiers (e.g. `CR2`, `xmin`), acronyms (e.g. `PBFT`, `2PL`), and error codes.
 
-- $k_1 = 1.5$: Term frequency saturation parameter.
-- $b = 0.75$: Document length penalization factor.
-- $|D|$: Document length in tokens, $\text{avgdl}$: Average document length across corpus.
-
-### 3. Reciprocal Rank Fusion (RRF)
-RRF combines candidate rankings from disparate scoring distributions without requiring score calibration:
-
-$$\text{RRF\_Score}(d) = \sum_{m \in \{\text{dense}, \text{bm25}\}} \frac{1}{k + r_m(d)}$$
-
-Where $r_m(d)$ is the 1-based rank of document $d$ in retriever $m$, and $k = 60$ is the smoothing constant.
+### 3. Hybrid Retrieval & RRF
+- **Mechanism**: Queries both dense and sparse indices independently; fuses candidate rank lists using **Reciprocal Rank Fusion**:
+  $$\text{RRF\_Score}(d) = \sum_{m \in \{\text{dense}, \text{bm25}\}} \frac{1}{60 + r_m(d)}$$
+- **Best for**: Production workloads where queries contain both conceptual descriptions and exact technical tokens.
 
 ### 4. Cross-Encoder Reranking
-While dense bi-encoders encode query and document independently ($E(q) \cdot E(d)$), a neural Cross-Encoder computes joint all-to-all cross-attention:
-
-$$\text{Score}_{\text{cross}}(q, d) = \text{CrossEncoder}(\mathbf{q} \circ \mathbf{d})$$
-
-### 5. Evaluation Metrics
-- **Recall@K**: $\frac{|\text{Retrieved}_K \cap \text{Relevant}|}{|\text{Relevant}|}$
-- **Precision@K**: $\frac{|\text{Retrieved}_K \cap \text{Relevant}|}{K}$
-- **Mean Reciprocal Rank (MRR)**: $\frac{1}{|Q|} \sum_{i=1}^{|Q|} \frac{1}{\text{rank}_i}$
-- **Normalized Discounted Cumulative Gain (NDCG@K)**: $\frac{\text{DCG}@K}{\text{IDCG}@K}$, where $\text{DCG}@K = \sum_{i=1}^{K} \frac{2^{\text{rel}_i} - 1}{\log_2(i + 1)}$
+- **Mechanism**: Evaluates all-to-all cross-attention between full query and candidate text to resolve subtle semantic nuances and eliminate false positives.
 
 ---
 
-## Repository Structure
+## 📊 Retrieval Evaluation & Benchmark
 
-```
-rag-from-first-principles/
-├── core/
-│   ├── schema.py          # Document, Chunk, SearchResult, QueryResult dataclasses
-│   ├── loaders.py         # Text, Markdown, PDF, Directory loaders with metadata
-│   ├── chunker.py         # Character & Recursive boundary splitters
-│   ├── embeddings.py      # Pretrained embeddings wrapper (SentenceTransformers, Gemini, Hashing fallback)
-│   ├── vector_store.py    # NumPy Dense Vector Store (Cosine, Dot, Euclidean, Filters, Persistence)
-│   ├── bm25.py            # Okapi BM25 Inverted Index from scratch (TF, IDF, doc-len norm)
-│   ├── retriever.py       # Dense, Sparse, and Hybrid (RRF & Linear) retrievers
-│   ├── reranker.py        # Cross-Encoder & Score-based Rerankers
-│   ├── prompt.py          # Grounding templates & citation formatting
-│   └── llm.py             # Gemini, Ollama, and Mock LLM providers
-│
-├── storage/
-│   ├── index.py           # Unified index manager & incremental document hashing
-│   └── persistence.py     # Clean serialization to disk (npz + json metadata)
-│
-├── evaluation/
-│   ├── dataset.py         # QA & Ground Truth evaluation dataset structures
-│   ├── metrics.py         # Pure math: Recall@K, Precision@K, MRR, NDCG@K, HitRate, Citations
-│   ├── evaluator.py       # Evaluator for Dense, BM25, Hybrid, and Hybrid+Reranker
-│   └── benchmark.py       # Automated benchmark runner with rich comparison table
-│
-├── data/
-│   ├── sample_knowledge/  # Curated test documents (Distributed systems, Cloud policy, AI optimization)
-│   └── eval_dataset.json  # Benchmark ground truth dataset
-│
-├── tests/                 # Comprehensive unit test suite (15 passing tests)
-│   ├── test_chunker.py
-│   ├── test_vector_store.py
-│   ├── test_bm25.py
-│   ├── test_retriever.py
-│   ├── test_reranker.py
-│   ├── test_evaluation.py
-│   └── test_pipeline.py
-│
-├── rag_pipeline.py        # End-to-end RAG orchestrator
-├── main.py                # Interactive CLI with /query, /inspect, /benchmark, /ingest, /stats
-├── requirements.txt       # Clean dependencies
-└── README.md              # Documentation
+Retrieval quality is measured quantitatively using a ground-truth benchmark dataset ([`data/eval_dataset.json`](./data/eval_dataset.json)) across multi-domain engineering documents (Distributed Consensus, Database Concurrency, OS Virtual Memory, Neural Optimization, Cloud Policies, Event Streaming).
+
+### Measured Performance Comparison
+
+| Retriever | Recall@5 | Precision@5 | MRR | NDCG@5 | Latency (ms) |
+|---|---:|---:|---:|---:|---:|
+| **BM25 (Sparse)** | 0.9444 | 0.4333 | 1.0000 | 0.9609 | **0.07** |
+| **Dense (NumPy)** | 0.9444 | 0.4333 | 1.0000 | 0.9507 | 46.85 |
+| **Hybrid (RRF)** | **1.0000** | **0.4667** | **1.0000** | **0.9946** | 40.71 |
+| **Hybrid + Reranker** | **1.0000** | **0.4667** | **1.0000** | **1.0000** | 1469.80 |
+
+### Key Findings:
+1. **Hybrid RRF achieves 100% Recall@5 (+5.56% over single retrievers)**: Merging dense semantics with sparse keyword matches eliminates individual retrieval blind spots.
+2. **Cross-Encoder Reranking achieves a perfect 1.0000 NDCG@5**: Joint cross-attention places the single most authoritative context chunk at Rank 1 for 100% of benchmark queries.
+3. **Sub-millisecond Lexical Latency**: The custom BM25 index returns candidates in **0.07ms**, making it suitable for ultra-fast first-stage candidate retrieval.
+
+To reproduce these metrics:
+```bash
+poetry run rag benchmark
+# or: python main.py benchmark
 ```
 
 ---
 
-## Quickstart
+## 💡 End-to-End Example
 
-### 1. Installation with Poetry (or pip)
+### 1. Multi-Stage Retrieval Inspection (`/inspect`)
+
+```text
+Query: "What is the refund period and policy for enterprise customers?"
+----------------------------------------------------------------------
+1. cloud_platform_policy.txt (chunk: 0, id: b77ae61ea38d17d0_0)
+   Dense Score:  0.5963     BM25 Score:   7.9226
+   RRF Score:    0.03279    Rerank Score: 4.4228
+   "# Cloud Platform Service Level Agreement & Refund Policies
+    ## 1. Refund and Billing Policy
+    Enterprise customers are eligible for a full refund within a 30-day trial period..."
+
+2. cloud_platform_policy.txt (chunk: 1, id: b77ae61ea38d17d0_1)
+   Dense Score:  0.3729     BM25 Score:   2.5303
+   RRF Score:    0.03226    Rerank Score: -6.5446
+   "To request a refund or credit, the organization's billing administrator must submit..."
+```
+
+### 2. Grounded Generation with Inline Citations
+
+```text
+=== Grounded Answer ===
+Enterprise customers are eligible for a full refund within a 30-day trial period from the initial invoice date [Source 1]. Refund or credit requests submitted between 30 and 60 days are eligible for prorated service credits only, submitted via tickets tagged 'Billing Dispute' [Source 1, Source 2].
+
+=== Sources & Citations ===
++------------+---------------------------+-------+---------------------------------------------+
+| Tag        | Source Document           | Chunk | Preview Snippet                             |
++------------+---------------------------+-------+---------------------------------------------+
+| [Source 1] | cloud_platform_policy.txt | 0     | # Cloud Platform SLA & Refund Policies...   |
+| [Source 2] | cloud_platform_policy.txt | 1     | To request a refund or credit, submit a...  |
++------------+---------------------------+-------+---------------------------------------------+
+```
+
+---
+
+## 📐 Design Decisions
+
+- **Why implement BM25 from scratch?**  
+  To understand inverted indexing, term frequency saturation curves ($k_1$), and length normalization penalties ($b$) without relying on Lucene, Elasticsearch, or external search servers.
+- **Why vector search in pure NumPy?**  
+  To explore exact matrix vector math (Cosine, Euclidean, Dot Product), partitioning algorithms, and persistence mechanics before introducing complex external vector databases.
+- **Why Reciprocal Rank Fusion (RRF)?**  
+  Dense similarity scores ($\in [-1, 1]$) and BM25 scores ($\in [0, \infty)$) have incompatible scales. RRF merges candidate positions rather than raw scores, avoiding fragile score calibration.
+- **Why two-stage retrieval (Retrieve &rarr; Rerank)?**  
+  Dense and sparse retrieval cast a wide net across thousands of chunks in milliseconds. The Cross-Encoder performs computationally expensive all-to-all attention on only the top 20–50 candidates.
+- **Why separate retrieval from generation?**  
+  Decoupling retrieval allows indexing and ranking quality to be quantitatively benchmarked (Recall@K, NDCG@K) independently from LLM prompt engineering.
+
+---
+
+## 📖 Deep Dive Documentation
+
+Detailed architectural derivations and implementation notes:
+
+- [**System Architecture & SOLID OOP Design**](./docs/overview.md)
+- [**Phase 1: Ingestion, Loaders & Recursive Chunking**](./docs/phase1_ingestion_and_chunking.md)
+- [**Phase 2: NumPy Dense Vector Store & Matrix Geometry**](./docs/phase2_dense_vector_store.md)
+- [**Phase 3: Okapi BM25 Inverted Index from Scratch**](./docs/phase3_bm25_inverted_index.md)
+- [**Phase 4: Hybrid Retrieval & Reciprocal Rank Fusion**](./docs/phase4_hybrid_retrieval_and_fusion.md)
+- [**Phase 5: Cross-Encoder Neural Reranking**](./docs/phase5_cross_encoder_reranking.md)
+- [**Phase 6: CO-STAR Prompting & Citation Grounding**](./docs/phase6_costar_prompt_and_generation.md)
+- [**Phase 7: Evaluation Metrics & Automated Benchmarking**](./docs/phase7_evaluation_and_benchmarking.md)
+
+---
+
+## 📁 Repository Structure
+
+```
+core/
+├── schema.py          # Document, Chunk, SearchResult, QueryResult
+├── loaders.py         # Text, Markdown, PDF, Directory loaders
+├── chunker.py         # Character & Recursive boundary splitters
+├── embeddings.py      # SentenceTransformers & Gemini API embeddings
+├── vector_store.py    # NumPy Dense Vector Store (Cosine / Dot / Euclidean)
+├── bm25.py            # Okapi BM25 Inverted Index from scratch
+├── retriever.py       # Dense, Sparse, and Hybrid (RRF) retrievers
+├── reranker.py        # Cross-Encoder neural reranker
+├── prompt.py          # CO-STAR prompt builder & citation grounding
+└── llm.py             # Gemini, Ollama, and Mock LLM adapters
+
+storage/
+├── index.py           # Index manager & SHA-256 incremental hashing
+└── persistence.py     # Atomic disk serialization
+
+evaluation/
+├── dataset.py         # Evaluation dataset schema & loaders
+├── metrics.py         # Pure math: Recall@K, Precision@K, MRR, NDCG@K
+├── evaluator.py       # Multi-query pipeline evaluator
+└── benchmark.py       # Side-by-side comparative benchmark runner
+
+data/
+├── sample_knowledge/  # Curated technical knowledge base
+└── eval_dataset.json  # Ground-truth evaluation dataset
+
+tests/                 # Complete unit test suite (15 passing tests)
+rag_pipeline.py        # End-to-end RAG pipeline orchestrator
+main.py                # Interactive CLI & REPL
+pyproject.toml         # Poetry package configuration
+```
+
+---
+
+## 🚀 Quick Start
+
+### 1. Clone & Setup
 
 ```bash
-# Using Poetry
-poetry install
+git clone https://github.com/Shikhaar/Rag-from-Scratch.git
+cd Rag-from-Scratch
+```
 
-# Or using pip
+### 2. Install Dependencies
+
+Using **Poetry**:
+```bash
+poetry install
+```
+
+Or using **pip**:
+```bash
 pip install -r requirements.txt
 ```
 
-### 2. Interactive CLI
+### 3. (Optional) Configure LLM API Key
 
-Launch the interactive REPL:
+To use Google Gemini for generation:
+```bash
+# On Linux/macOS
+export GEMINI_API_KEY="your_api_key_here"
+
+# On Windows PowerShell
+$env:GEMINI_API_KEY="your_api_key_here"
+```
+*(If no API key is provided, the system automatically uses the built-in deterministic `MockLLM` for offline execution.)*
+
+### 4. Run the Interactive CLI
 
 ```bash
-# Using Poetry script entrypoint
+# Using Poetry
 poetry run rag
 
-# Or standard python
+# Or using Python
 python main.py
 ```
 
-### 3. Key CLI Commands
-
-| Command | Description |
-|---|---|
-| `/query <question>` | Run grounded generation with CO-STAR prompt and inline citations |
-| `/inspect <question>` | Inspect multi-stage scores (`Dense`, `BM25`, `RRF`, `Rerank`) |
-| `/benchmark` | Run 4-way evaluation benchmark across the test dataset |
-| `/ingest <path>` | Incrementally ingest a file (`.txt`, `.md`, `.pdf`) or directory |
-| `/mode <hybrid\|dense\|bm25>` | Switch active retrieval strategy |
-| `/stats` | View active index statistics and memory footprint |
+### CLI Commands:
+- `/query <question>`: Run grounded generation with inline citations.
+- `/inspect <question>`: Inspect multi-stage scores (`Dense`, `BM25`, `RRF`, `Rerank`).
+- `/benchmark`: Execute the 4-way evaluation benchmark across the test dataset.
+- `/ingest <path>`: Incrementally index a document or directory.
+- `/mode <hybrid|dense|bm25>`: Switch active retrieval strategy.
+- `/stats`: View active index statistics.
 
 ---
 
-## Complete Phase Documentation (`docs/`)
+## 🧪 Testing
 
-Explore in-depth mathematical derivations and design explanations:
-
-- [**System Architecture & SOLID OOP Design**](file:///c:/Shikhar/Rag/docs/overview.md)
-- [**Phase 1: Ingestion, Loaders & Recursive Chunking**](file:///c:/Shikhar/Rag/docs/phase1_ingestion_and_chunking.md)
-- [**Phase 2: NumPy Dense Vector Store (Cosine, Euclidean, Dot Product)**](file:///c:/Shikhar/Rag/docs/phase2_dense_vector_store.md)
-- [**Phase 3: Okapi BM25 Sparse Inverted Index from Scratch**](file:///c:/Shikhar/Rag/docs/phase3_bm25_inverted_index.md)
-- [**Phase 4: Hybrid Retrieval & Reciprocal Rank Fusion (RRF)**](file:///c:/Shikhar/Rag/docs/phase4_hybrid_retrieval_and_fusion.md)
-- [**Phase 5: Cross-Encoder Neural Reranking**](file:///c:/Shikhar/Rag/docs/phase5_cross_encoder_reranking.md)
-- [**Phase 6: CO-STAR Prompting Framework & Citation Grounding**](file:///c:/Shikhar/Rag/docs/phase6_costar_prompt_and_generation.md)
-- [**Phase 7: Retrieval Evaluation & Automated Benchmarking**](file:///c:/Shikhar/Rag/docs/phase7_evaluation_and_benchmarking.md)
-
----
-
-## Explainable Multi-Stage Inspection (`/inspect`)
-
-Inspect granular scores across each step of the retrieval and ranking funnel:
-
-```
-rag [hybrid]> /inspect What is the refund period and policy?
-
-Query: "What is the refund period and policy?"
-──────────────────────────────────────────────────────────────────────
-1. cloud_platform_policy.txt  (page: N/A, chunk: 0, id: 9a2f1b8c_0)
-   Dense Score:  0.8124     BM25 Score:  7.8421
-   RRF Score:    0.03279    Rerank Score: 0.9412
-   "Enterprise customers are eligible for a full refund within a 30-day trial period..."
-
-2. cloud_platform_policy.txt  (page: N/A, chunk: 1, id: 9a2f1b8c_1)
-   Dense Score:  0.6432     BM25 Score:  3.1209
-   RRF Score:    0.02105    Rerank Score: 0.4120
-   "Requests submitted after 30 days but before 60 days are eligible for credits..."
-```
-
----
-
-<<<<<<< HEAD
-## Automated Retrieval Benchmark
-
-Run `python main.py benchmark` to evaluate all retrieval configurations on the dataset:
-=======
-## Empirical Retrieval Benchmark
-Tested on a multi-domain engineering knowledge base covering Distributed Consensus (Raft/PBFT), Database Concurrency (MVCC/2PL), Operating Systems (Virtual Memory/Paging), Neural Optimization (AdamW/FlashAttention), Cloud Policies, and Event Streaming (Kafka):
->>>>>>> c884673 (docs: clarify technical scope, position as production internals, and add empirical benchmark analysis)
-
-| Configuration | Recall@5 | MRR | NDCG@5 | HitRate@5 | Latency (ms) |
-|---|---|---|---|---|---|
-| **BM25 (Sparse)** | 0.9444 | 1.0000 | 0.9609 | 1.0000 | **0.15** |
-| **Dense (NumPy)** | 0.9444 | 1.0000 | 0.9507 | 1.0000 | 121.25 |
-| **Hybrid (RRF)** | **1.0000** | **1.0000** | **0.9946** | **1.0000** | 141.93 |
-| **Hybrid + Reranker** | **1.0000** | **1.0000** | **1.0000** | **1.0000** | 2837.75 |
-
-### Quantitative Takeaways:
-1. **Hybrid RRF boosts Recall@5 to 100% (+5.56% increase over single retrievers)**: Fusing lexical BM25 matching and dense semantic vectors eliminates single-retriever blind spots (e.g. acronyms missed by dense embeddings, semantic paraphrases missed by BM25).
-2. **Cross-Encoder Reranker achieves a perfect 1.0000 NDCG@5**: Joint all-to-all cross-attention eliminates false positives and elevates the most authoritative context chunk to Rank 1 across 100% of benchmark queries.
-3. **Sub-millisecond Lexical Speed**: The pure-Python BM25 inverted index executes in **0.15ms**, making it suitable for ultra-fast first-stage candidate filtering.
-
----
-
-## Incremental Document Ingestion
-
-The ingestion pipeline computes cryptographic content hashes (`SHA-256`) for every file:
-
-```
-Document Ingest
-      │
-      ▼
-Compute SHA-256 Hash
-      │
-   Exists in Registry with identical hash?
-   ├── YES ──> [Skip Processing (0ms IO)]
-   └── NO  ──> [Purge Stale Chunks] ──> [Chunk & Re-embed] ──> [Update Index & Registry]
-```
-
----
-
-## Running the Unit Tests
+Run the automated unit test suite:
 
 ```bash
 python -m unittest discover tests
 ```
 
 Output:
-```
+```text
 ...............
 ----------------------------------------------------------------------
-Ran 15 tests in 0.189s
+Ran 15 tests in 0.196s
 
 OK
 ```
 
 ---
 
-## Extensibility & Customization
+## 📜 License
 
-### Using Google Gemini API
-
-Set your environment variable:
-```bash
-export GEMINI_API_KEY="your-gemini-key"
-python main.py
-```
-
-### Using Local Ollama
-
-```python
-from rag_pipeline import RAGPipeline
-from core.llm import OllamaLLM
-
-pipeline = RAGPipeline(llm=OllamaLLM(model_name="llama3:latest"))
-result = pipeline.query("How does Raft consensus work?")
-print(result.answer)
-```
-
----
-
-## License
-MIT License. Built for educational rigor and high-performance production understanding.
+MIT License. Designed for deep educational understanding and high-performance production engineering.
