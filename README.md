@@ -5,7 +5,7 @@
 
 ---
 
-## 🎯 Why I Built This
+## Why I Built This
 
 Most Retrieval-Augmented Generation (RAG) applications abstract retrieval behind monolithic frameworks like LangChain or LlamaIndex, treating similarity search and ranking as black boxes.
 
@@ -18,7 +18,7 @@ This project implements the core retrieval and generation pipeline from first pr
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
                          ┌─────────────────────────┐
@@ -79,7 +79,7 @@ This project implements the core retrieval and generation pipeline from first pr
 
 ---
 
-## 🧩 Key Features
+## Key Features
 
 | Component | What It Does | Implementation |
 |---|---|---|
@@ -95,7 +95,7 @@ This project implements the core retrieval and generation pipeline from first pr
 
 ---
 
-## 🔍 Retrieval Strategies
+## Retrieval Strategies
 
 ### 1. Dense Retrieval
 - **Mechanism**: Projects query and chunks into continuous vector space; calculates Cosine similarity via NumPy matrix multiplication.
@@ -115,7 +115,7 @@ This project implements the core retrieval and generation pipeline from first pr
 
 ---
 
-## 📊 Retrieval Evaluation & Benchmark
+## Retrieval Evaluation & Benchmark
 
 Retrieval quality is measured quantitatively using a ground-truth benchmark dataset ([`data/eval_dataset.json`](./data/eval_dataset.json)) across multi-domain engineering documents (Distributed Consensus, Database Concurrency, OS Virtual Memory, Neural Optimization, Cloud Policies, Event Streaming).
 
@@ -141,7 +141,7 @@ poetry run rag benchmark
 
 ---
 
-## 💡 End-to-End Example
+## End-to-End Example
 
 ### 1. Multi-Stage Retrieval Inspection (`/inspect`)
 
@@ -178,7 +178,7 @@ Enterprise customers are eligible for a full refund within a 30-day trial period
 
 ---
 
-## 📐 Design Decisions
+## Design Decisions
 
 - **Why implement BM25 from scratch?**  
   To understand inverted indexing, term frequency saturation curves ($k_1$), and length normalization penalties ($b$) without relying on Lucene, Elasticsearch, or external search servers.
@@ -193,7 +193,7 @@ Enterprise customers are eligible for a full refund within a 30-day trial period
 
 ---
 
-## 📖 Deep Dive Documentation
+## Deep Dive Documentation
 
 Detailed architectural derivations and implementation notes:
 
@@ -208,44 +208,7 @@ Detailed architectural derivations and implementation notes:
 
 ---
 
-## 📁 Repository Structure
-
-```
-core/
-├── schema.py          # Document, Chunk, SearchResult, QueryResult
-├── loaders.py         # Text, Markdown, PDF, Directory loaders
-├── chunker.py         # Character & Recursive boundary splitters
-├── embeddings.py      # SentenceTransformers & Gemini API embeddings
-├── vector_store.py    # NumPy Dense Vector Store (Cosine / Dot / Euclidean)
-├── bm25.py            # Okapi BM25 Inverted Index from scratch
-├── retriever.py       # Dense, Sparse, and Hybrid (RRF) retrievers
-├── reranker.py        # Cross-Encoder neural reranker
-├── prompt.py          # CO-STAR prompt builder & citation grounding
-└── llm.py             # Gemini, Ollama, and Mock LLM adapters
-
-storage/
-├── index.py           # Index manager & SHA-256 incremental hashing
-└── persistence.py     # Atomic disk serialization
-
-evaluation/
-├── dataset.py         # Evaluation dataset schema & loaders
-├── metrics.py         # Pure math: Recall@K, Precision@K, MRR, NDCG@K
-├── evaluator.py       # Multi-query pipeline evaluator
-└── benchmark.py       # Side-by-side comparative benchmark runner
-
-data/
-├── sample_knowledge/  # Curated technical knowledge base
-└── eval_dataset.json  # Ground-truth evaluation dataset
-
-tests/                 # Complete unit test suite (15 passing tests)
-rag_pipeline.py        # End-to-end RAG pipeline orchestrator
-main.py                # Interactive CLI & REPL
-pyproject.toml         # Poetry package configuration
-```
-
----
-
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Clone & Setup
 
@@ -298,7 +261,7 @@ python main.py
 
 ---
 
-## 🧪 Testing
+## Testing
 
 Run the automated unit test suite:
 
@@ -317,6 +280,6 @@ OK
 
 ---
 
-## 📜 License
+## License
 
 MIT License. Designed for deep educational understanding and high-performance production engineering.
